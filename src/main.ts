@@ -16,7 +16,7 @@ const program = new Command();
 
 program
   .name("markit")
-  .description("Convert anything to markdown. Mark it, and move on.")
+  .description("Convert anything to markdown.")
   .version(`markit ${version}`, "-V, --version")
   .option("--json", "Output as JSON")
   .option("-q, --quiet", "Raw markdown only, no decoration")
