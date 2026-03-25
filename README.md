@@ -1,6 +1,6 @@
 # markit ✓
 
-Convert anything to markdown. Everything gets milled.
+Convert anything to markdown. Mark it, and move on.
 
 ```bash
 npm install -g markit-ai
@@ -37,9 +37,10 @@ markit schema.yaml
 markit https://example.com/article
 markit https://en.wikipedia.org/wiki/Markdown
 
-# Media (with AI features — set OPENAI_API_KEY)
-markit photo.jpg              # EXIF metadata + AI description
-markit recording.mp3          # Audio metadata + transcription
+# Media (with AI — set OPENAI_API_KEY or ANTHROPIC_API_KEY)
+markit photo.jpg                          # EXIF metadata + AI description
+markit recording.mp3                      # Audio metadata + transcription
+markit photo.jpg -p "Extract all text"    # Custom instructions
 
 # Write to file
 markit report.pdf -o report.md
@@ -75,6 +76,8 @@ markit data.xlsx -q | napkin create "Imported Data"
 | Code | `.py` `.ts` `.go` `.rs` ... | Fenced code block |
 | Plain text | `.txt` `.md` `.rst` `.log` | Pass-through |
 
+Need more? [Write a plugin.](#plugins)
+
 ---
 
 ## AI Features
@@ -82,23 +85,100 @@ markit data.xlsx -q | napkin create "Imported Data"
 Images and audio get metadata extraction for free. For AI-powered descriptions and transcription, set an API key:
 
 ```bash
+# OpenAI (default provider)
 export OPENAI_API_KEY=sk-...
-markit photo.jpg        # EXIF + "A sunset over mountains with..."
-markit interview.mp3    # Metadata + full transcript
-```
+markit photo.jpg
 
-Or configure it:
+# Anthropic
+markit config set llm.provider anthropic
+export ANTHROPIC_API_KEY=sk-ant-...
+markit photo.jpg
 
-```bash
-markit init
-markit config set llm.apiKey sk-...
-markit config set llm.model gpt-4o-mini
-```
-
-Works with any OpenAI-compatible API (OpenAI, Azure, Ollama, etc.):
-
-```bash
+# Any OpenAI-compatible API (Ollama, Groq, Together, etc.)
 markit config set llm.apiBase http://localhost:11434/v1
+```
+
+Focus the AI on what matters:
+
+```bash
+markit receipt.jpg -p "List all line items with prices as a table"
+markit diagram.png -p "Describe the architecture and data flow"
+markit whiteboard.jpg -p "Extract all text verbatim"
+```
+
+---
+
+## Plugins
+
+Extend markit with new formats, override builtins, or add LLM providers.
+
+### Install
+
+```bash
+markit plugin install npm:markit-plugin-dwg
+markit plugin install git:github.com/user/markit-plugin-ocr
+markit plugin install ./my-plugin.ts
+markit plugin list
+markit plugin remove dwg
+```
+
+### Write a Plugin
+
+A plugin is a function that receives an API and registers converters and/or providers:
+
+```typescript
+import type { MarkitPluginAPI } from "markit-ai";
+
+export default function(api: MarkitPluginAPI) {
+  api.setName("cad");
+  api.setVersion("1.0.0");
+
+  // Register a converter for a new format
+  api.registerConverter(
+    {
+      name: "dwg",
+      accepts: (info) => [".dwg", ".dxf"].includes(info.extension || ""),
+      convert: async (input, info) => {
+        // Your conversion logic
+        return { markdown: "..." };
+      },
+    },
+    // Optional: declare the format so it shows in `markit formats`
+    { name: "AutoCAD", extensions: [".dwg", ".dxf"] },
+  );
+}
+```
+
+Plugin converters run **before** builtins — so you can override any format:
+
+```typescript
+export default function(api: MarkitPluginAPI) {
+  api.setName("better-pdf");
+
+  // This replaces the built-in PDF converter
+  api.registerConverter({
+    name: "pdf",
+    accepts: (info) => info.extension === ".pdf",
+    convert: async (input, info) => {
+      // Your superior PDF extraction
+      return { markdown: "..." };
+    },
+  });
+}
+```
+
+Plugins can also register LLM providers:
+
+```typescript
+api.registerProvider({
+  name: "gemini",
+  envKeys: ["GOOGLE_API_KEY"],
+  defaultBase: "https://generativelanguage.googleapis.com/v1beta",
+  defaultModel: "gemini-2.0-flash",
+  create: (config, prompt) => ({
+    describe: async (image, mime) => { /* ... */ },
+  }),
+});
 ```
 
 ---
@@ -108,14 +188,9 @@ markit config set llm.apiBase http://localhost:11434/v1
 Every command supports `--json`. Raw markdown with `-q`.
 
 ```bash
-# Structured output for parsing
-markit report.pdf --json
-
-# Raw markdown, nothing else
-markit report.pdf -q
-
-# Teach your agent about mill
-markit onboard
+markit report.pdf --json       # Structured output for parsing
+markit report.pdf -q           # Raw markdown, nothing else
+markit onboard                 # Add instructions to CLAUDE.md
 ```
 
 ---
@@ -144,7 +219,7 @@ const openai = new OpenAI();
 const markit = new Markit({
   describe: async (image, mime) => {
     const res = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4.1-nano",
       messages: [{ role: "user", content: [
         { type: "text", text: "Describe this image." },
         { type: "image_url", image_url: { url: `data:${mime};base64,${image.toString("base64")}` } },
@@ -168,7 +243,7 @@ Mix providers — Claude for vision, OpenAI for audio, whatever:
 const markit = new Markit({
   describe: async (image, mime) => {
     const res = await anthropic.messages.create({
-      model: "claude-sonnet-4-20250514",
+      model: "claude-haiku-4-5",
       messages: [{ role: "user", content: [
         { type: "image", source: { type: "base64", media_type: mime, data: image.toString("base64") } },
         { type: "text", text: "Describe this image." },
@@ -180,10 +255,23 @@ const markit = new Markit({
 });
 ```
 
-Individual converters are importable too:
+Or use the built-in providers — no SDK needed:
 
 ```typescript
-import { PdfConverter, HtmlConverter } from "markit-ai";
+import { Markit, createLlmFunctions, loadConfig } from "markit-ai";
+
+const config = loadConfig(); // reads .markit/config.json + env vars
+const markit = new Markit(createLlmFunctions(config));
+```
+
+With plugins:
+
+```typescript
+import { Markit, createLlmFunctions, loadConfig, loadAllPlugins } from "markit-ai";
+
+const config = loadConfig();
+const plugins = await loadAllPlugins();
+const markit = new Markit(createLlmFunctions(config), plugins);
 ```
 
 ---
@@ -194,6 +282,7 @@ import { PdfConverter, HtmlConverter } from "markit-ai";
 markit init                              # Create .markit/config.json
 markit config show                       # Show resolved settings
 markit config get llm.model              # Get a value
+markit config set llm.provider anthropic # Switch provider
 markit config set llm.apiKey sk-...      # Set a value
 ```
 
@@ -202,22 +291,21 @@ markit config set llm.apiKey sk-...      # Set a value
 ```json
 {
   "llm": {
+    "provider": "openai",
     "apiBase": "https://api.openai.com/v1",
     "apiKey": "sk-...",
-    "model": "gpt-4o",
+    "model": "gpt-4.1-nano",
     "transcriptionModel": "gpt-4o-mini-transcribe"
   }
 }
 ```
 
-Env vars override config:
+Env vars override config. Each provider checks its own env vars first:
 
-| Setting | Env var | Config key | Default |
-|---------|---------|------------|---------|
-| API key | `OPENAI_API_KEY` | `llm.apiKey` | — |
-| API base | `OPENAI_BASE_URL` | `llm.apiBase` | `https://api.openai.com/v1` |
-| Model | `MARKIT_MODEL` | `llm.model` | `gpt-4o` |
-| Transcription | — | `llm.transcriptionModel` | `gpt-4o-mini-transcribe` |
+| Provider | Env vars | Default model |
+|----------|---------|---------------|
+| `openai` | `OPENAI_API_KEY`, `MARKIT_API_KEY` | `gpt-4.1-nano` |
+| `anthropic` | `ANTHROPIC_API_KEY`, `MARKIT_API_KEY` | `claude-haiku-4-5` |
 
 ---
 
@@ -226,6 +314,7 @@ Env vars override config:
 ```bash
 markit <source>                          # Convert file or URL
 markit <source> -o output.md             # Write to file
+markit <source> -p "instructions"        # Custom AI prompt
 markit <source> --json                   # JSON output
 markit <source> -q                       # Raw markdown only
 cat file.pdf | markit -                  # Read from stdin
@@ -234,6 +323,9 @@ markit init                              # Create .markit/ config
 markit config show                       # Show settings
 markit config get <key>                  # Get config value
 markit config set <key> <value>          # Set config value
+markit plugin install <source>           # Install plugin
+markit plugin list                       # List plugins
+markit plugin remove <name>              # Remove plugin
 markit onboard                           # Add to CLAUDE.md
 ```
 
