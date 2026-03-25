@@ -6,11 +6,13 @@ const CONFIG_FILE = "config.json";
 
 export interface MarkitConfig {
   llm?: {
-    /** OpenAI-compatible API base URL (default: https://api.openai.com/v1) */
+    /** Provider: "openai" (default) or "anthropic" */
+    provider?: "openai" | "anthropic";
+    /** API base URL */
     apiBase?: string;
-    /** API key — prefer env var OPENAI_API_KEY over storing here */
+    /** API key — prefer env vars over storing here */
     apiKey?: string;
-    /** Model for image descriptions (default: gpt-4o) */
+    /** Model for image descriptions (default: gpt-4o or claude-sonnet-4-20250514) */
     model?: string;
     /** Model for audio transcription (default: gpt-4o-mini-transcribe) */
     transcriptionModel?: string;
@@ -70,6 +72,13 @@ export function saveConfig(config: MarkitConfig): void {
  * Checks: OPENAI_API_KEY, MARKIT_API_KEY
  */
 export function resolveApiKey(config: MarkitConfig): string | undefined {
+  if (config.llm?.provider === "anthropic") {
+    return (
+      process.env.ANTHROPIC_API_KEY ||
+      process.env.MARKIT_API_KEY ||
+      config.llm?.apiKey
+    );
+  }
   return (
     process.env.OPENAI_API_KEY ||
     process.env.MARKIT_API_KEY ||
