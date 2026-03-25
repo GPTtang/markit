@@ -141,7 +141,7 @@ export async function installPlugin(
       break;
     }
     case "git": {
-      const url = new URL(parsed.url!);
+      const url = new URL(parsed.url || "");
       const gitDir = join(
         pluginsDir,
         "git",
@@ -164,10 +164,10 @@ export async function installPlugin(
       break;
     }
     case "local": {
-      if (!existsSync(parsed.path!)) {
+      if (!parsed.path || !existsSync(parsed.path)) {
         throw new Error(`Path does not exist: ${parsed.path}`);
       }
-      installPath = parsed.path!;
+      installPath = parsed.path;
       break;
     }
   }

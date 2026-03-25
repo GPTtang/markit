@@ -1,5 +1,5 @@
-import type { Provider, ResolvedConfig } from "./types.js";
 import type { MarkitOptions } from "../types.js";
+import type { Provider, ResolvedConfig } from "./types.js";
 
 export const openai: Provider = {
   name: "openai",
@@ -24,7 +24,12 @@ export const openai: Provider = {
                 role: "user",
                 content: [
                   { type: "text", text: prompt },
-                  { type: "image_url", image_url: { url: `data:${mimetype};base64,${image.toString("base64")}` } },
+                  {
+                    type: "image_url",
+                    image_url: {
+                      url: `data:${mimetype};base64,${image.toString("base64")}`,
+                    },
+                  },
                 ],
               },
             ],
@@ -46,7 +51,10 @@ export const openai: Provider = {
         const file = new File([audio], `audio${ext}`, { type: mimetype });
 
         const formData = new FormData();
-        formData.append("model", config.transcriptionModel || "gpt-4o-mini-transcribe");
+        formData.append(
+          "model",
+          config.transcriptionModel || "gpt-4o-mini-transcribe",
+        );
         formData.append("file", file);
 
         const res = await fetch(`${config.apiBase}/audio/transcriptions`, {
@@ -69,8 +77,12 @@ export const openai: Provider = {
 
 function mimeToExt(mime: string): string {
   const map: Record<string, string> = {
-    "audio/mpeg": ".mp3", "audio/wav": ".wav", "audio/mp4": ".m4a",
-    "video/mp4": ".mp4", "audio/ogg": ".ogg", "audio/flac": ".flac",
+    "audio/mpeg": ".mp3",
+    "audio/wav": ".wav",
+    "audio/mp4": ".m4a",
+    "video/mp4": ".mp4",
+    "audio/ogg": ".ogg",
+    "audio/flac": ".flac",
     "audio/aac": ".aac",
   };
   return map[mime] || ".mp3";

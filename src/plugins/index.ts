@@ -1,9 +1,9 @@
-export type { MarkitPluginAPI, PluginFunction, PluginDef } from "./types.js";
 export { createPluginAPI, resolvePluginExport } from "./api.js";
-export { loadPluginFromPath, loadAllPlugins } from "./loader.js";
 export {
   installPlugin,
-  removePlugin,
   listInstalled,
   parsePluginSource,
+  removePlugin,
 } from "./installer.js";
+export { loadAllPlugins, loadPluginFromPath } from "./loader.js";
+export type { MarkitPluginAPI, PluginDef, PluginFunction } from "./types.js";

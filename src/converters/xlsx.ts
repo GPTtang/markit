@@ -1,6 +1,6 @@
-import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import JSZip from "jszip";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".xlsx"];
 const MIMETYPES = [
@@ -11,12 +11,20 @@ export class XlsxConverter implements Converter {
   name = "xlsx";
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension)) return true;
-    if (streamInfo.mimetype && MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))) return true;
+    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension))
+      return true;
+    if (
+      streamInfo.mimetype &&
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
+    )
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, _streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    _streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const zip = await JSZip.loadAsync(input);
     const parser = new XMLParser({
       ignoreAttributes: false,
@@ -37,7 +45,9 @@ export class XlsxConverter implements Converter {
     const sheets = toArray(wb.workbook?.sheets?.sheet);
 
     // Parse workbook rels to map rIds to sheet files
-    const relsXml = await zip.file("xl/_rels/workbook.xml.rels")?.async("string");
+    const relsXml = await zip
+      .file("xl/_rels/workbook.xml.rels")
+      ?.async("string");
     const rels = relsXml ? parser.parse(relsXml) : null;
     const relList = toArray(rels?.Relationships?.Relationship);
     const relMap = new Map<string, string>();
@@ -53,7 +63,9 @@ export class XlsxConverter implements Converter {
       const target = relMap.get(rId);
       if (!target) continue;
 
-      const sheetPath = target.startsWith("/") ? target.slice(1) : `xl/${target}`;
+      const sheetPath = target.startsWith("/")
+        ? target.slice(1)
+        : `xl/${target}`;
       const sheetXml = await zip.file(sheetPath)?.async("string");
       if (!sheetXml) continue;
 
@@ -105,7 +117,10 @@ export class XlsxConverter implements Converter {
       const is = cell.is;
       if (!is) return "";
       if (is.t != null) return textValue(is.t);
-      if (is.r) return toArray(is.r).map((r: any) => textValue(r.t)).join("");
+      if (is.r)
+        return toArray(is.r)
+          .map((r: any) => textValue(r.t))
+          .join("");
       return "";
     }
     // Boolean

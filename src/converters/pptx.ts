@@ -1,6 +1,6 @@
-import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import JSZip from "jszip";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".pptx"];
 const MIMETYPES = [
@@ -11,12 +11,20 @@ export class PptxConverter implements Converter {
   name = "pptx";
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension)) return true;
-    if (streamInfo.mimetype && MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))) return true;
+    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension))
+      return true;
+    if (
+      streamInfo.mimetype &&
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
+    )
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, _streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    _streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const zip = await JSZip.loadAsync(input);
     const parser = new XMLParser({
       ignoreAttributes: false,
@@ -30,13 +38,23 @@ export class PptxConverter implements Converter {
 
     const pres = parser.parse(presXml);
     const sldIdList = pres["p:presentation"]?.["p:sldIdLst"]?.["p:sldId"];
-    const sldIds = Array.isArray(sldIdList) ? sldIdList : sldIdList ? [sldIdList] : [];
+    const sldIds = Array.isArray(sldIdList)
+      ? sldIdList
+      : sldIdList
+        ? [sldIdList]
+        : [];
 
     // Get relationship mappings
-    const relsXml = await zip.file("ppt/_rels/presentation.xml.rels")?.async("string");
+    const relsXml = await zip
+      .file("ppt/_rels/presentation.xml.rels")
+      ?.async("string");
     const rels = relsXml ? parser.parse(relsXml) : null;
-    const relList = rels?.["Relationships"]?.["Relationship"];
-    const relArray = Array.isArray(relList) ? relList : relList ? [relList] : [];
+    const relList = rels?.Relationships?.Relationship;
+    const relArray = Array.isArray(relList)
+      ? relList
+      : relList
+        ? [relList]
+        : [];
     const relMap = new Map<string, string>();
     for (const r of relArray) {
       relMap.set(r["@_Id"], r["@_Target"]);
@@ -55,8 +73,8 @@ export class PptxConverter implements Converter {
       const slideFiles = Object.keys(zip.files)
         .filter((f) => /^ppt\/slides\/slide\d+\.xml$/.test(f))
         .sort((a, b) => {
-          const na = parseInt(a.match(/slide(\d+)/)?.[1] || "0");
-          const nb = parseInt(b.match(/slide(\d+)/)?.[1] || "0");
+          const na = parseInt(a.match(/slide(\d+)/)?.[1] || "0", 10);
+          const nb = parseInt(b.match(/slide(\d+)/)?.[1] || "0", 10);
           return na - nb;
         });
       slidePaths.push(...slideFiles);
@@ -91,21 +109,32 @@ export class PptxConverter implements Converter {
 
       // Tables
       const graphicFrames = spTree["p:graphicFrame"];
-      const gfList = Array.isArray(graphicFrames) ? graphicFrames : graphicFrames ? [graphicFrames] : [];
+      const gfList = Array.isArray(graphicFrames)
+        ? graphicFrames
+        : graphicFrames
+          ? [graphicFrames]
+          : [];
       for (const gf of gfList) {
         const table = this.extractTable(gf);
         if (table) slideLines.push(table);
       }
 
       // Slide notes
-      const noteFile = slidePaths[i].replace("slides/slide", "notesSlides/notesSlide");
+      const noteFile = slidePaths[i].replace(
+        "slides/slide",
+        "notesSlides/notesSlide",
+      );
       const noteXml = await zip.file(noteFile)?.async("string");
       if (noteXml) {
         const note = parser.parse(noteXml);
         const noteSpTree = note["p:notes"]?.["p:cSld"]?.["p:spTree"];
         if (noteSpTree) {
           const noteShapes = noteSpTree["p:sp"];
-          const noteList = Array.isArray(noteShapes) ? noteShapes : noteShapes ? [noteShapes] : [];
+          const noteList = Array.isArray(noteShapes)
+            ? noteShapes
+            : noteShapes
+              ? [noteShapes]
+              : [];
           const noteTexts: string[] = [];
           for (const ns of noteList) {
             // Skip slide image placeholder
@@ -132,7 +161,11 @@ export class PptxConverter implements Converter {
     if (!txBody) return "";
 
     const paragraphs = txBody["a:p"];
-    const pList = Array.isArray(paragraphs) ? paragraphs : paragraphs ? [paragraphs] : [];
+    const pList = Array.isArray(paragraphs)
+      ? paragraphs
+      : paragraphs
+        ? [paragraphs]
+        : [];
 
     const lines: string[] = [];
     for (const p of pList) {
@@ -141,7 +174,8 @@ export class PptxConverter implements Converter {
       const parts: string[] = [];
       for (const r of rList) {
         const t = r["a:t"];
-        if (t != null) parts.push(typeof t === "object" ? t["#text"] || "" : String(t));
+        if (t != null)
+          parts.push(typeof t === "object" ? t["#text"] || "" : String(t));
       }
       if (parts.length > 0) lines.push(parts.join(""));
     }
@@ -164,16 +198,24 @@ export class PptxConverter implements Converter {
       const cellTexts: string[] = [];
       for (const cell of cellList) {
         const txBody = cell["a:txBody"];
-        if (!txBody) { cellTexts.push(""); continue; }
+        if (!txBody) {
+          cellTexts.push("");
+          continue;
+        }
         const paragraphs = txBody["a:p"];
-        const pList = Array.isArray(paragraphs) ? paragraphs : paragraphs ? [paragraphs] : [];
+        const pList = Array.isArray(paragraphs)
+          ? paragraphs
+          : paragraphs
+            ? [paragraphs]
+            : [];
         const parts: string[] = [];
         for (const p of pList) {
           const runs = p["a:r"];
           const rList = Array.isArray(runs) ? runs : runs ? [runs] : [];
           for (const r of rList) {
             const t = r["a:t"];
-            if (t != null) parts.push(typeof t === "object" ? t["#text"] || "" : String(t));
+            if (t != null)
+              parts.push(typeof t === "object" ? t["#text"] || "" : String(t));
           }
         }
         cellTexts.push(parts.join(" "));

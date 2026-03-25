@@ -1,4 +1,4 @@
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".ipynb"];
 
@@ -6,11 +6,15 @@ export class IpynbConverter implements Converter {
   name = "ipynb";
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension)) return true;
+    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension))
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, _streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    _streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const text = new TextDecoder("utf-8").decode(input);
     const notebook = JSON.parse(text);
 
@@ -20,7 +24,7 @@ export class IpynbConverter implements Converter {
     for (const cell of notebook.cells ?? []) {
       const source = Array.isArray(cell.source)
         ? cell.source.join("")
-        : cell.source ?? "";
+        : (cell.source ?? "");
 
       if (cell.cell_type === "markdown") {
         sections.push(source);
@@ -41,9 +45,14 @@ export class IpynbConverter implements Converter {
         const outputs: string[] = [];
         for (const out of cell.outputs ?? []) {
           if (out.output_type === "stream") {
-            const text = Array.isArray(out.text) ? out.text.join("") : out.text ?? "";
+            const text = Array.isArray(out.text)
+              ? out.text.join("")
+              : (out.text ?? "");
             if (text.trim()) outputs.push(text.trim());
-          } else if (out.output_type === "execute_result" || out.output_type === "display_data") {
+          } else if (
+            out.output_type === "execute_result" ||
+            out.output_type === "display_data"
+          ) {
             const data = out.data;
             if (data?.["text/plain"]) {
               const plain = Array.isArray(data["text/plain"])

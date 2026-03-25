@@ -1,8 +1,8 @@
-import type { OutputOptions } from "../utils/output.js";
-import { output, success, error, dim, bold } from "../utils/output.js";
-import { loadConfig, saveConfig, findConfigDir } from "../config.js";
+import { findConfigDir, loadConfig, saveConfig } from "../config.js";
 import { getProvider, listProviders } from "../providers/index.js";
 import { EXIT_ERROR, EXIT_USER_ERROR } from "../utils/exit-codes.js";
+import type { OutputOptions } from "../utils/output.js";
+import { bold, dim, error, output, success } from "../utils/output.js";
 
 export async function configShow(
   _args: string[],
@@ -36,17 +36,28 @@ export async function configShow(
 
       if (provider) {
         // Resolve API key
-        const apiKey = provider.envKeys.reduce<string | undefined>(
-          (found, key) => found || process.env[key],
-          undefined,
-        ) || config.llm?.apiKey;
-        const keySource = provider.envKeys.find((k) => process.env[k]) || (config.llm?.apiKey ? "config" : undefined);
+        const apiKey =
+          provider.envKeys.reduce<string | undefined>(
+            (found, key) => found || process.env[key],
+            undefined,
+          ) || config.llm?.apiKey;
+        const keySource =
+          provider.envKeys.find((k) => process.env[k]) ||
+          (config.llm?.apiKey ? "config" : undefined);
 
-        console.log(`  ${dim("api key:")} ${apiKey ? `***${apiKey.slice(-4)} (${keySource})` : dim("not set")}`);
-        console.log(`  ${dim("api base:")} ${config.llm?.apiBase || provider.defaultBase}`);
-        console.log(`  ${dim("model:")} ${config.llm?.model || provider.defaultModel}`);
+        console.log(
+          `  ${dim("api key:")} ${apiKey ? `***${apiKey.slice(-4)} (${keySource})` : dim("not set")}`,
+        );
+        console.log(
+          `  ${dim("api base:")} ${config.llm?.apiBase || provider.defaultBase}`,
+        );
+        console.log(
+          `  ${dim("model:")} ${config.llm?.model || provider.defaultModel}`,
+        );
         if (provider.defaultTranscriptionModel) {
-          console.log(`  ${dim("transcription:")} ${config.llm?.transcriptionModel || provider.defaultTranscriptionModel}`);
+          console.log(
+            `  ${dim("transcription:")} ${config.llm?.transcriptionModel || provider.defaultTranscriptionModel}`,
+          );
         }
         console.log(`  ${dim("env vars:")} ${provider.envKeys.join(", ")}`);
       } else {
@@ -89,14 +100,20 @@ export async function configSet(
 ): Promise<void> {
   if (!findConfigDir()) {
     output(options, {
-      json: () => ({ success: false, error: "No .markit/ directory. Run 'markit init'" }),
+      json: () => ({
+        success: false,
+        error: "No .markit/ directory. Run 'markit init'",
+      }),
       human: () => error("No .markit/ directory. Run 'markit init' first."),
     });
     process.exit(EXIT_ERROR);
   }
 
   // Secrets: read from stdin instead of args (avoids shell history)
-  const isSecret = key.toLowerCase().includes("key") || key.toLowerCase().includes("secret") || key.toLowerCase().includes("token");
+  const isSecret =
+    key.toLowerCase().includes("key") ||
+    key.toLowerCase().includes("secret") ||
+    key.toLowerCase().includes("token");
   let resolved: string;
 
   if (isSecret && !value) {
@@ -115,7 +132,11 @@ export async function configSet(
     }
   } else if (isSecret && value) {
     // Warn if secret passed as arg
-    console.error(dim("  hint: secrets in args leak to shell history. Use: markit config set llm.apiKey < keyfile"));
+    console.error(
+      dim(
+        "  hint: secrets in args leak to shell history. Use: markit config set llm.apiKey < keyfile",
+      ),
+    );
     resolved = value;
   } else if (value === undefined) {
     error("Missing value. Usage: markit config set <key> <value>");
@@ -129,7 +150,7 @@ export async function configSet(
   let parsed: any = resolved;
   if (resolved === "true") parsed = true;
   else if (resolved === "false") parsed = false;
-  else if (/^\d+$/.test(resolved)) parsed = parseInt(resolved);
+  else if (/^\d+$/.test(resolved)) parsed = parseInt(resolved, 10);
 
   setNestedValue(config, key, parsed);
   saveConfig(config);

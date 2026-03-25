@@ -1,5 +1,5 @@
 import TurndownService from "turndown";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".html", ".htm"];
 const MIMETYPES = ["text/html", "application/xhtml"];
@@ -13,14 +13,17 @@ export class HtmlConverter implements Converter {
     }
     if (
       streamInfo.mimetype &&
-      MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
     ) {
       return true;
     }
     return false;
   }
 
-  async convert(input: Buffer, streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const charset = streamInfo.charset || "utf-8";
     const html = new TextDecoder(charset).decode(input);
 

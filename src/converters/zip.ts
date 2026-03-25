@@ -1,6 +1,6 @@
+import { basename, extname } from "node:path";
 import JSZip from "jszip";
-import { extname, basename } from "node:path";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".zip"];
 const MIMETYPES = ["application/zip", "application/x-zip-compressed"];
@@ -14,12 +14,20 @@ export class ZipConverter implements Converter {
   }
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension)) return true;
-    if (streamInfo.mimetype && MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))) return true;
+    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension))
+      return true;
+    if (
+      streamInfo.mimetype &&
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
+    )
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const zip = await JSZip.loadAsync(input);
     const label = streamInfo.localPath || streamInfo.filename || "archive.zip";
     const sections: string[] = [`Content from \`${basename(label)}\`:`];

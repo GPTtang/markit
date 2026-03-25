@@ -1,8 +1,8 @@
 import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import type { OutputOptions } from "../utils/output.js";
-import { output, success, hint, cmd } from "../utils/output.js";
 import type { MarkitConfig } from "../config.js";
+import type { OutputOptions } from "../utils/output.js";
+import { cmd, hint, output, success } from "../utils/output.js";
 
 const DATA_DIR = ".markit";
 

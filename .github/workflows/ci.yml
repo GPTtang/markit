@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  test:
+  check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -15,5 +15,9 @@ jobs:
         with:
           bun-version: latest
       - run: bun install
+      - name: Lint & format
+        run: bun run check
+      - name: Type check
+        run: bunx tsc --noEmit
       - name: Run tests
         run: bun test

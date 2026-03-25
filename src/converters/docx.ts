@@ -1,6 +1,6 @@
 import mammoth from "mammoth";
 import TurndownService from "turndown";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".docx"];
 const MIMETYPES = [
@@ -16,14 +16,17 @@ export class DocxConverter implements Converter {
     }
     if (
       streamInfo.mimetype &&
-      MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
     ) {
       return true;
     }
     return false;
   }
 
-  async convert(input: Buffer, _streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    _streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const { value: html } = await mammoth.convertToHtml({ buffer: input });
     const turndown = new TurndownService({
       headingStyle: "atx",

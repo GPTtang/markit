@@ -1,5 +1,5 @@
 import TurndownService from "turndown";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const WIKIPEDIA_RE = /^https?:\/\/[a-zA-Z]{2,3}\.wikipedia\.org\//;
 
@@ -11,7 +11,10 @@ export class WikipediaConverter implements Converter {
     return WIKIPEDIA_RE.test(streamInfo.url);
   }
 
-  async convert(input: Buffer, streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const html = new TextDecoder(streamInfo.charset || "utf-8").decode(input);
 
     // Extract the main content div
@@ -21,9 +24,12 @@ export class WikipediaConverter implements Converter {
 
     // Extract title
     const titleMatch =
-      html.match(/<span[^>]*class="mw-page-title-main"[^>]*>([\s\S]*?)<\/span>/i) ||
-      html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
-    const title = titleMatch ? titleMatch[1].replace(/ - Wikipedia$/, "").trim() : undefined;
+      html.match(
+        /<span[^>]*class="mw-page-title-main"[^>]*>([\s\S]*?)<\/span>/i,
+      ) || html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+    const title = titleMatch
+      ? titleMatch[1].replace(/ - Wikipedia$/, "").trim()
+      : undefined;
 
     const turndown = new TurndownService({
       headingStyle: "atx",

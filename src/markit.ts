@@ -1,24 +1,29 @@
 import { readFileSync } from "node:fs";
-import { extname, basename } from "node:path";
-import type { Converter, ConversionResult, StreamInfo, MarkitOptions } from "./types.js";
-import { PdfConverter } from "./converters/pdf.js";
-import { DocxConverter } from "./converters/docx.js";
-import { PptxConverter } from "./converters/pptx.js";
-import { XlsxConverter } from "./converters/xlsx.js";
-import { EpubConverter } from "./converters/epub.js";
-import { IpynbConverter } from "./converters/ipynb.js";
-import { HtmlConverter } from "./converters/html.js";
-import { WikipediaConverter } from "./converters/wikipedia.js";
-import { RssConverter } from "./converters/rss.js";
-import { CsvConverter } from "./converters/csv.js";
-import { JsonConverter } from "./converters/json.js";
-import { YamlConverter } from "./converters/yaml.js";
-import { XmlConverter } from "./converters/xml.js";
-import { ZipConverter } from "./converters/zip.js";
-import { ImageConverter } from "./converters/image.js";
+import { basename, extname } from "node:path";
 import { AudioConverter } from "./converters/audio.js";
+import { CsvConverter } from "./converters/csv.js";
+import { DocxConverter } from "./converters/docx.js";
+import { EpubConverter } from "./converters/epub.js";
+import { HtmlConverter } from "./converters/html.js";
+import { ImageConverter } from "./converters/image.js";
+import { IpynbConverter } from "./converters/ipynb.js";
+import { JsonConverter } from "./converters/json.js";
+import { PdfConverter } from "./converters/pdf.js";
 import { PlainTextConverter } from "./converters/plain-text.js";
+import { PptxConverter } from "./converters/pptx.js";
+import { RssConverter } from "./converters/rss.js";
+import { WikipediaConverter } from "./converters/wikipedia.js";
+import { XlsxConverter } from "./converters/xlsx.js";
+import { XmlConverter } from "./converters/xml.js";
+import { YamlConverter } from "./converters/yaml.js";
+import { ZipConverter } from "./converters/zip.js";
 import type { PluginDef } from "./plugins/types.js";
+import type {
+  ConversionResult,
+  Converter,
+  MarkitOptions,
+  StreamInfo,
+} from "./types.js";
 
 export class Markit {
   private converters: Converter[] = [];
@@ -47,10 +52,7 @@ export class Markit {
       new AudioConverter(),
     ];
 
-    const generic: Converter[] = [
-      new XmlConverter(),
-      new HtmlConverter(),
-    ];
+    const generic: Converter[] = [new XmlConverter(), new HtmlConverter()];
 
     // ZIP gets all converters (plugin + builtin) for recursive extraction
     const allNonZip = [...pluginConverters, ...specific, ...generic];
@@ -85,14 +87,15 @@ export class Markit {
   async convertUrl(url: string): Promise<ConversionResult> {
     const response = await fetch(url, {
       headers: {
-        Accept:
-          "text/markdown, text/html;q=0.9, text/plain;q=0.8, */*;q=0.1",
+        Accept: "text/markdown, text/html;q=0.9, text/plain;q=0.8, */*;q=0.1",
         "User-Agent": "mill/0.1.0",
       },
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+      throw new Error(
+        `Failed to fetch ${url}: ${response.status} ${response.statusText}`,
+      );
     }
 
     const contentType = response.headers.get("content-type") || "";

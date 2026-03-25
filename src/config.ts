@@ -55,8 +55,5 @@ export function saveConfig(config: MarkitConfig): void {
   const configDir = findConfigDir();
   const dir = configDir || join(process.cwd(), DATA_DIR);
   if (!existsSync(dir)) mkdirSync(dir, { recursive: true });
-  writeFileSync(
-    join(dir, CONFIG_FILE),
-    `${JSON.stringify(config, null, 2)}\n`,
-  );
+  writeFileSync(join(dir, CONFIG_FILE), `${JSON.stringify(config, null, 2)}\n`);
 }

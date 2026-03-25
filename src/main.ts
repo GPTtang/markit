@@ -2,12 +2,12 @@
 
 import { createRequire } from "node:module";
 import { Command } from "commander";
+import { configGet, configSet, configShow } from "./commands/config.js";
 import { convert } from "./commands/convert.js";
-import { onboard } from "./commands/onboard.js";
 import { formats } from "./commands/formats.js";
 import { init } from "./commands/init.js";
-import { configShow, configGet, configSet } from "./commands/config.js";
-import { pluginInstall, pluginRemove, pluginList } from "./commands/plugin.js";
+import { onboard } from "./commands/onboard.js";
+import { pluginInstall, pluginList, pluginRemove } from "./commands/plugin.js";
 
 const require = createRequire(import.meta.url);
 const { version } = require("../package.json");
@@ -90,9 +90,7 @@ configCmd
     await configSet(key, value, { json: globals.json, quiet: globals.quiet });
   });
 
-const pluginCmd = program
-  .command("plugin")
-  .description("Manage plugins");
+const pluginCmd = program.command("plugin").description("Manage plugins");
 
 pluginCmd
   .command("install <source>")
@@ -143,7 +141,15 @@ program.on("command:*", async (args) => {
   }
 
   // Check for typos against known subcommands
-  const commands = ["convert", "formats", "onboard", "help", "init", "config", "plugin"];
+  const commands = [
+    "convert",
+    "formats",
+    "onboard",
+    "help",
+    "init",
+    "config",
+    "plugin",
+  ];
   const close = commands.filter(
     (c) => levenshtein(source, c) <= 2 && source !== c,
   );

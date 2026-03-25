@@ -1,7 +1,11 @@
-import { installPlugin, removePlugin, listInstalled } from "../plugins/installer.js";
-import type { OutputOptions } from "../utils/output.js";
-import { output, success, error, dim, bold } from "../utils/output.js";
+import {
+  installPlugin,
+  listInstalled,
+  removePlugin,
+} from "../plugins/installer.js";
 import { EXIT_ERROR } from "../utils/exit-codes.js";
+import type { OutputOptions } from "../utils/output.js";
+import { bold, dim, error, output, success } from "../utils/output.js";
 
 export async function pluginInstall(
   source: string,
@@ -44,9 +48,7 @@ export async function pluginRemove(
   if (!removed) process.exit(EXIT_ERROR);
 }
 
-export async function pluginList(
-  options: OutputOptions,
-): Promise<void> {
+export async function pluginList(options: OutputOptions): Promise<void> {
   const plugins = listInstalled();
   output(options, {
     json: () => ({ plugins }),

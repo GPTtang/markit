@@ -1,6 +1,11 @@
-import type { Converter } from "../types.js";
 import type { Provider } from "../providers/types.js";
-import type { MarkitPluginAPI, PluginDef, PluginFunction, FormatDef } from "./types.js";
+import type { Converter } from "../types.js";
+import type {
+  FormatDef,
+  MarkitPluginAPI,
+  PluginDef,
+  PluginFunction,
+} from "./types.js";
 
 export function createPluginAPI(pluginId: string): {
   api: MarkitPluginAPI;
@@ -50,11 +55,7 @@ export function resolvePluginExport(
     exported(api);
     return resolve();
   }
-  if (
-    exported &&
-    typeof exported === "object" &&
-    "converters" in exported
-  ) {
+  if (exported && typeof exported === "object" && "converters" in exported) {
     return exported as PluginDef;
   }
   throw new Error(

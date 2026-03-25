@@ -1,18 +1,41 @@
-import type { Converter, ConversionResult, StreamInfo, MarkitOptions } from "../types.js";
+import type {
+  ConversionResult,
+  Converter,
+  MarkitOptions,
+  StreamInfo,
+} from "../types.js";
 
-const EXTENSIONS = [".mp3", ".wav", ".m4a", ".mp4", ".ogg", ".flac", ".aac", ".wma"];
+const EXTENSIONS = [
+  ".mp3",
+  ".wav",
+  ".m4a",
+  ".mp4",
+  ".ogg",
+  ".flac",
+  ".aac",
+  ".wma",
+];
 const MIMETYPES = ["audio/", "video/mp4"];
 
 export class AudioConverter implements Converter {
   name = "audio";
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension)) return true;
-    if (streamInfo.mimetype && MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))) return true;
+    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension))
+      return true;
+    if (
+      streamInfo.mimetype &&
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
+    )
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, streamInfo: StreamInfo, options?: MarkitOptions): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+    options?: MarkitOptions,
+  ): Promise<ConversionResult> {
     const sections: string[] = [];
 
     // Extract audio metadata
@@ -32,7 +55,9 @@ export class AudioConverter implements Converter {
         Artist: common.artist,
         Album: common.album,
         Genre: common.genre?.join(", "),
-        Track: common.track?.no ? `${common.track.no}${common.track.of ? ` of ${common.track.of}` : ""}` : undefined,
+        Track: common.track?.no
+          ? `${common.track.no}${common.track.of ? ` of ${common.track.of}` : ""}`
+          : undefined,
         Year: common.year ? String(common.year) : undefined,
         Duration: format.duration
           ? this.formatDuration(format.duration)
@@ -61,7 +86,8 @@ export class AudioConverter implements Converter {
     // AI transcription
     if (options?.transcribe) {
       try {
-        const mimetype = streamInfo.mimetype || guessMimetype(streamInfo.extension);
+        const mimetype =
+          streamInfo.mimetype || guessMimetype(streamInfo.extension);
         const transcript = await options.transcribe(input, mimetype);
         if (transcript) {
           sections.push(`\n## Transcript\n\n${transcript}`);
@@ -82,16 +108,22 @@ export class AudioConverter implements Converter {
     const h = Math.floor(seconds / 3600);
     const m = Math.floor((seconds % 3600) / 60);
     const s = Math.round(seconds % 60);
-    if (h > 0) return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+    if (h > 0)
+      return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
     return `${m}:${String(s).padStart(2, "0")}`;
   }
 }
 
 function guessMimetype(ext?: string): string {
   const map: Record<string, string> = {
-    ".mp3": "audio/mpeg", ".wav": "audio/wav", ".m4a": "audio/mp4",
-    ".mp4": "video/mp4", ".ogg": "audio/ogg", ".flac": "audio/flac",
-    ".aac": "audio/aac", ".wma": "audio/x-ms-wma",
+    ".mp3": "audio/mpeg",
+    ".wav": "audio/wav",
+    ".m4a": "audio/mp4",
+    ".mp4": "video/mp4",
+    ".ogg": "audio/ogg",
+    ".flac": "audio/flac",
+    ".aac": "audio/aac",
+    ".wma": "audio/x-ms-wma",
   };
   return map[ext || ""] || "audio/mpeg";
 }

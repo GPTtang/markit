@@ -31,5 +31,9 @@ export interface Converter {
   accepts(streamInfo: StreamInfo): boolean;
 
   /** Convert the source to markdown */
-  convert(input: Buffer, streamInfo: StreamInfo, options?: MarkitOptions): Promise<ConversionResult>;
+  convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+    options?: MarkitOptions,
+  ): Promise<ConversionResult>;
 }

@@ -1,5 +1,5 @@
-import type { Provider, ResolvedConfig } from "./types.js";
 import type { MarkitOptions } from "../types.js";
+import type { Provider, ResolvedConfig } from "./types.js";
 
 export const anthropic: Provider = {
   name: "anthropic",

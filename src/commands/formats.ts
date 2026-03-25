@@ -1,6 +1,6 @@
-import type { OutputOptions } from "../utils/output.js";
-import { output, bold, dim } from "../utils/output.js";
 import { loadAllPlugins } from "../plugins/loader.js";
+import type { OutputOptions } from "../utils/output.js";
+import { bold, dim, output } from "../utils/output.js";
 
 interface Format {
   name: string;
@@ -23,11 +23,27 @@ const BUILTIN_FORMATS: Format[] = [
   { name: "JSON", extensions: [".json"], builtin: true },
   { name: "YAML", extensions: [".yaml", ".yml"], builtin: true },
   { name: "XML", extensions: [".xml", ".svg"], builtin: true },
-  { name: "Images", extensions: [".jpg", ".png", ".gif", ".webp"], builtin: true },
-  { name: "Audio", extensions: [".mp3", ".wav", ".m4a", ".flac"], builtin: true },
+  {
+    name: "Images",
+    extensions: [".jpg", ".png", ".gif", ".webp"],
+    builtin: true,
+  },
+  {
+    name: "Audio",
+    extensions: [".mp3", ".wav", ".m4a", ".flac"],
+    builtin: true,
+  },
   { name: "ZIP", extensions: [".zip"], builtin: true },
-  { name: "Plain text", extensions: [".txt", ".md", ".rst", ".log"], builtin: true },
-  { name: "Code", extensions: [".py", ".js", ".ts", ".go", ".rs", "..."], builtin: true },
+  {
+    name: "Plain text",
+    extensions: [".txt", ".md", ".rst", ".log"],
+    builtin: true,
+  },
+  {
+    name: "Code",
+    extensions: [".py", ".js", ".ts", ".go", ".rs", "..."],
+    builtin: true,
+  },
   { name: "URLs", extensions: ["http://", "https://"], builtin: true },
   { name: "Wikipedia", extensions: ["*.wikipedia.org"], builtin: true },
 ];
@@ -65,7 +81,9 @@ export async function formats(
         console.log();
         for (const fmt of pluginFormats) {
           const exts = fmt.extensions.join(", ");
-          console.log(`  ${fmt.name.padEnd(14)} ${dim(exts)} ${dim(`(${fmt.plugin})`)}`);
+          console.log(
+            `  ${fmt.name.padEnd(14)} ${dim(exts)} ${dim(`(${fmt.plugin})`)}`,
+          );
         }
       }
       console.log();

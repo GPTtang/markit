@@ -1,4 +1,4 @@
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".csv", ".tsv"];
 const MIMETYPES = ["text/csv", "text/tab-separated-values"];
@@ -12,14 +12,17 @@ export class CsvConverter implements Converter {
     }
     if (
       streamInfo.mimetype &&
-      MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
     ) {
       return true;
     }
     return false;
   }
 
-  async convert(input: Buffer, streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const text = new TextDecoder(streamInfo.charset || "utf-8").decode(input);
     const delimiter = streamInfo.extension === ".tsv" ? "\t" : ",";
     const rows = this.parseRows(text, delimiter);

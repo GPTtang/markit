@@ -1,13 +1,57 @@
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const TEXT_EXTENSIONS = [
-  ".txt", ".md", ".markdown", ".rst", ".log", ".cfg", ".ini", ".yaml", ".yml",
-  ".toml", ".xml", ".svg", ".env", ".sh", ".bash", ".zsh", ".fish",
-  ".py", ".js", ".ts", ".jsx", ".tsx", ".go", ".rs", ".rb", ".java",
-  ".c", ".cpp", ".h", ".hpp", ".cs", ".swift", ".kt", ".scala",
-  ".sql", ".r", ".m", ".lua", ".pl", ".php", ".ex", ".exs",
-  ".zig", ".nim", ".v", ".d", ".hs", ".ml", ".clj",
-  ".makefile", ".dockerfile",
+  ".txt",
+  ".md",
+  ".markdown",
+  ".rst",
+  ".log",
+  ".cfg",
+  ".ini",
+  ".yaml",
+  ".yml",
+  ".toml",
+  ".xml",
+  ".svg",
+  ".env",
+  ".sh",
+  ".bash",
+  ".zsh",
+  ".fish",
+  ".py",
+  ".js",
+  ".ts",
+  ".jsx",
+  ".tsx",
+  ".go",
+  ".rs",
+  ".rb",
+  ".java",
+  ".c",
+  ".cpp",
+  ".h",
+  ".hpp",
+  ".cs",
+  ".swift",
+  ".kt",
+  ".scala",
+  ".sql",
+  ".r",
+  ".m",
+  ".lua",
+  ".pl",
+  ".php",
+  ".ex",
+  ".exs",
+  ".zig",
+  ".nim",
+  ".v",
+  ".d",
+  ".hs",
+  ".ml",
+  ".clj",
+  ".makefile",
+  ".dockerfile",
 ];
 
 const TEXT_MIMETYPES = ["text/"];
@@ -16,12 +60,15 @@ export class PlainTextConverter implements Converter {
   name = "plain-text";
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && TEXT_EXTENSIONS.includes(streamInfo.extension)) {
+    if (
+      streamInfo.extension &&
+      TEXT_EXTENSIONS.includes(streamInfo.extension)
+    ) {
       return true;
     }
     if (
       streamInfo.mimetype &&
-      TEXT_MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))
+      TEXT_MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
     ) {
       return true;
     }
@@ -32,12 +79,18 @@ export class PlainTextConverter implements Converter {
     return false;
   }
 
-  async convert(input: Buffer, streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const charset = streamInfo.charset || "utf-8";
     const text = new TextDecoder(charset).decode(input);
 
     // If it's already markdown, return as-is
-    if (streamInfo.extension === ".md" || streamInfo.extension === ".markdown") {
+    if (
+      streamInfo.extension === ".md" ||
+      streamInfo.extension === ".markdown"
+    ) {
       return { markdown: text };
     }
 

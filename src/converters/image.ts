@@ -1,18 +1,42 @@
-import type { Converter, ConversionResult, StreamInfo, MarkitOptions } from "../types.js";
+import type {
+  ConversionResult,
+  Converter,
+  MarkitOptions,
+  StreamInfo,
+} from "../types.js";
 
-const EXTENSIONS = [".jpg", ".jpeg", ".png", ".gif", ".webp", ".tiff", ".tif", ".bmp", ".svg"];
+const EXTENSIONS = [
+  ".jpg",
+  ".jpeg",
+  ".png",
+  ".gif",
+  ".webp",
+  ".tiff",
+  ".tif",
+  ".bmp",
+  ".svg",
+];
 const MIMETYPES = ["image/"];
 
 export class ImageConverter implements Converter {
   name = "image";
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension)) return true;
-    if (streamInfo.mimetype && MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))) return true;
+    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension))
+      return true;
+    if (
+      streamInfo.mimetype &&
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
+    )
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, streamInfo: StreamInfo, options?: MarkitOptions): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    streamInfo: StreamInfo,
+    options?: MarkitOptions,
+  ): Promise<ConversionResult> {
     const sections: string[] = [];
 
     // Extract EXIF metadata
@@ -20,18 +44,33 @@ export class ImageConverter implements Converter {
       const exifr = await import("exifr");
       const metadata = await exifr.parse(input, {
         pick: [
-          "ImageWidth", "ImageHeight", "Make", "Model",
-          "DateTimeOriginal", "CreateDate", "GPSLatitude", "GPSLongitude",
-          "Artist", "Copyright", "Description", "Title",
-          "Keywords", "Software", "ExposureTime", "FNumber",
-          "ISO", "FocalLength",
+          "ImageWidth",
+          "ImageHeight",
+          "Make",
+          "Model",
+          "DateTimeOriginal",
+          "CreateDate",
+          "GPSLatitude",
+          "GPSLongitude",
+          "Artist",
+          "Copyright",
+          "Description",
+          "Title",
+          "Keywords",
+          "Software",
+          "ExposureTime",
+          "FNumber",
+          "ISO",
+          "FocalLength",
         ],
       });
 
       if (metadata && Object.keys(metadata).length > 0) {
         sections.push("## Metadata\n");
         if (metadata.ImageWidth && metadata.ImageHeight) {
-          sections.push(`ImageSize: ${metadata.ImageWidth}x${metadata.ImageHeight}`);
+          sections.push(
+            `ImageSize: ${metadata.ImageWidth}x${metadata.ImageHeight}`,
+          );
         }
         const fields: Record<string, string | undefined> = {
           Title: metadata.Title,
@@ -48,9 +87,10 @@ export class ImageConverter implements Converter {
           CreateDate: metadata.CreateDate
             ? String(metadata.CreateDate)
             : undefined,
-          GPS: metadata.GPSLatitude && metadata.GPSLongitude
-            ? `${metadata.GPSLatitude}, ${metadata.GPSLongitude}`
-            : undefined,
+          GPS:
+            metadata.GPSLatitude && metadata.GPSLongitude
+              ? `${metadata.GPSLatitude}, ${metadata.GPSLongitude}`
+              : undefined,
           ExposureTime: metadata.ExposureTime
             ? `1/${Math.round(1 / metadata.ExposureTime)}s`
             : undefined,
@@ -73,7 +113,8 @@ export class ImageConverter implements Converter {
     // AI description
     if (options?.describe) {
       try {
-        const mimetype = streamInfo.mimetype || guessMimetype(streamInfo.extension);
+        const mimetype =
+          streamInfo.mimetype || guessMimetype(streamInfo.extension);
         const description = await options.describe(input, mimetype);
         if (description) {
           sections.push(`\n## Description\n\n${description}`);
@@ -93,9 +134,15 @@ export class ImageConverter implements Converter {
 
 function guessMimetype(ext?: string): string {
   const map: Record<string, string> = {
-    ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".png": "image/png",
-    ".gif": "image/gif", ".webp": "image/webp", ".tiff": "image/tiff",
-    ".tif": "image/tiff", ".bmp": "image/bmp", ".svg": "image/svg+xml",
+    ".jpg": "image/jpeg",
+    ".jpeg": "image/jpeg",
+    ".png": "image/png",
+    ".gif": "image/gif",
+    ".webp": "image/webp",
+    ".tiff": "image/tiff",
+    ".tif": "image/tiff",
+    ".bmp": "image/bmp",
+    ".svg": "image/svg+xml",
   };
   return map[ext || ""] || "image/png";
 }

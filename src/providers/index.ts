@@ -1,8 +1,8 @@
-import type { Provider, ResolvedConfig } from "./types.js";
-import type { MarkitOptions } from "../types.js";
 import type { MarkitConfig } from "../config.js";
-import { openai } from "./openai.js";
+import type { MarkitOptions } from "../types.js";
 import { anthropic } from "./anthropic.js";
+import { openai } from "./openai.js";
+import type { Provider, ResolvedConfig } from "./types.js";
 
 export type { Provider, ProviderConfig, ResolvedConfig } from "./types.js";
 
@@ -35,7 +35,10 @@ export function listProviders(): string[] {
 /**
  * Resolve config + env vars into a ResolvedConfig for a provider.
  */
-function resolve(provider: Provider, config: MarkitConfig): ResolvedConfig | null {
+function resolve(
+  provider: Provider,
+  config: MarkitConfig,
+): ResolvedConfig | null {
   // API key: env vars (in provider priority order) > config file
   const apiKey =
     provider.envKeys.reduce<string | undefined>(
@@ -48,8 +51,10 @@ function resolve(provider: Provider, config: MarkitConfig): ResolvedConfig | nul
   return {
     apiKey,
     apiBase: (config.llm?.apiBase || provider.defaultBase).replace(/\/+$/, ""),
-    model: process.env.MARKIT_MODEL || config.llm?.model || provider.defaultModel,
-    transcriptionModel: config.llm?.transcriptionModel || provider.defaultTranscriptionModel,
+    model:
+      process.env.MARKIT_MODEL || config.llm?.model || provider.defaultModel,
+    transcriptionModel:
+      config.llm?.transcriptionModel || provider.defaultTranscriptionModel,
   };
 }
 
@@ -59,7 +64,10 @@ const BASE_PROMPT = "Describe this image in detail.";
  * Build describe/transcribe functions from config.
  * Resolves provider, API key, model, and base URL automatically.
  */
-export function createLlmFunctions(config: MarkitConfig, prompt?: string): MarkitOptions {
+export function createLlmFunctions(
+  config: MarkitConfig,
+  prompt?: string,
+): MarkitOptions {
   const providerName = config.llm?.provider || "openai";
   const provider = providers[providerName];
 
@@ -72,9 +80,7 @@ export function createLlmFunctions(config: MarkitConfig, prompt?: string): Marki
   const resolved = resolve(provider, config);
   if (!resolved) return {};
 
-  const fullPrompt = prompt
-    ? `${BASE_PROMPT}\n\n${prompt}`
-    : BASE_PROMPT;
+  const fullPrompt = prompt ? `${BASE_PROMPT}\n\n${prompt}` : BASE_PROMPT;
 
   return provider.create(resolved, fullPrompt);
 }

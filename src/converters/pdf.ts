@@ -1,4 +1,4 @@
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".pdf"];
 const MIMETYPES = ["application/pdf", "application/x-pdf"];
@@ -12,14 +12,17 @@ export class PdfConverter implements Converter {
     }
     if (
       streamInfo.mimetype &&
-      MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
     ) {
       return true;
     }
     return false;
   }
 
-  async convert(input: Buffer, _streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    _streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     let extractText: typeof import("unpdf").extractText;
     try {
       ({ extractText } = await import("unpdf"));

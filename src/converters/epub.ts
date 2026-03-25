@@ -1,21 +1,33 @@
-import JSZip from "jszip";
 import { XMLParser } from "fast-xml-parser";
+import JSZip from "jszip";
 import TurndownService from "turndown";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
 const EXTENSIONS = [".epub"];
-const MIMETYPES = ["application/epub", "application/epub+zip", "application/x-epub+zip"];
+const MIMETYPES = [
+  "application/epub",
+  "application/epub+zip",
+  "application/x-epub+zip",
+];
 
 export class EpubConverter implements Converter {
   name = "epub";
 
   accepts(streamInfo: StreamInfo): boolean {
-    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension)) return true;
-    if (streamInfo.mimetype && MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))) return true;
+    if (streamInfo.extension && EXTENSIONS.includes(streamInfo.extension))
+      return true;
+    if (
+      streamInfo.mimetype &&
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
+    )
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, _streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    _streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const zip = await JSZip.loadAsync(input);
     const parser = new XMLParser({
       ignoreAttributes: false,
@@ -24,7 +36,9 @@ export class EpubConverter implements Converter {
     });
 
     // Find content.opf path from container.xml
-    const containerXml = await zip.file("META-INF/container.xml")?.async("string");
+    const containerXml = await zip
+      .file("META-INF/container.xml")
+      ?.async("string");
     if (!containerXml) throw new Error("Invalid EPUB: missing container.xml");
 
     const container = parser.parse(containerXml);
@@ -52,7 +66,11 @@ export class EpubConverter implements Converter {
 
     // Build manifest map (id → href)
     const manifestItems = opf.package?.manifest?.item;
-    const itemList = Array.isArray(manifestItems) ? manifestItems : manifestItems ? [manifestItems] : [];
+    const itemList = Array.isArray(manifestItems)
+      ? manifestItems
+      : manifestItems
+        ? [manifestItems]
+        : [];
     const manifest = new Map<string, string>();
     for (const item of itemList) {
       manifest.set(item["@_id"], item["@_href"]);
@@ -60,19 +78,31 @@ export class EpubConverter implements Converter {
 
     // Get spine order
     const spineItems = opf.package?.spine?.itemref;
-    const spineList = Array.isArray(spineItems) ? spineItems : spineItems ? [spineItems] : [];
+    const spineList = Array.isArray(spineItems)
+      ? spineItems
+      : spineItems
+        ? [spineItems]
+        : [];
     const spineOrder = spineList.map((s: any) => s["@_idref"]);
 
     // Resolve file paths
-    const basePath = opfPath.includes("/") ? opfPath.substring(0, opfPath.lastIndexOf("/")) : "";
-    const turndown = new TurndownService({ headingStyle: "atx", codeBlockStyle: "fenced" });
+    const basePath = opfPath.includes("/")
+      ? opfPath.substring(0, opfPath.lastIndexOf("/"))
+      : "";
+    const turndown = new TurndownService({
+      headingStyle: "atx",
+      codeBlockStyle: "fenced",
+    });
 
     const sections: string[] = [];
 
     // Add metadata header
     const metaLines: string[] = [];
     for (const [key, value] of Object.entries(metadata)) {
-      if (value) metaLines.push(`**${key.charAt(0).toUpperCase() + key.slice(1)}:** ${value}`);
+      if (value)
+        metaLines.push(
+          `**${key.charAt(0).toUpperCase() + key.slice(1)}:** ${value}`,
+        );
     }
     if (metaLines.length > 0) sections.push(metaLines.join("\n"));
 

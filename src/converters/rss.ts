@@ -1,11 +1,14 @@
 import TurndownService from "turndown";
-import type { Converter, ConversionResult, StreamInfo } from "../types.js";
+import type { ConversionResult, Converter, StreamInfo } from "../types.js";
 
-const EXTENSIONS = [".rss", ".atom", ".xml"];
+const _EXTENSIONS = [".rss", ".atom", ".xml"];
 const MIMETYPES = [
-  "application/rss+xml", "application/rss",
-  "application/atom+xml", "application/atom",
-  "text/xml", "application/xml",
+  "application/rss+xml",
+  "application/rss",
+  "application/atom+xml",
+  "application/atom",
+  "text/xml",
+  "application/xml",
 ];
 
 export class RssConverter implements Converter {
@@ -13,16 +16,27 @@ export class RssConverter implements Converter {
 
   accepts(streamInfo: StreamInfo): boolean {
     // Only accept known RSS/Atom extensions directly
-    if (streamInfo.extension && [".rss", ".atom"].includes(streamInfo.extension)) return true;
+    if (
+      streamInfo.extension &&
+      [".rss", ".atom"].includes(streamInfo.extension)
+    )
+      return true;
 
     // For .xml, we'll try and fail gracefully
     if (streamInfo.extension === ".xml") return true;
 
-    if (streamInfo.mimetype && MIMETYPES.some((m) => streamInfo.mimetype!.startsWith(m))) return true;
+    if (
+      streamInfo.mimetype &&
+      MIMETYPES.some((m) => streamInfo.mimetype?.startsWith(m))
+    )
+      return true;
     return false;
   }
 
-  async convert(input: Buffer, _streamInfo: StreamInfo): Promise<ConversionResult> {
+  async convert(
+    input: Buffer,
+    _streamInfo: StreamInfo,
+  ): Promise<ConversionResult> {
     const text = new TextDecoder("utf-8").decode(input);
 
     // Detect feed type
@@ -125,17 +139,18 @@ export class RssConverter implements Converter {
     const re = new RegExp(`<${tag}[^>]*>([\\s\\S]*?)</${tag}>`, "i");
     const match = xml.match(re);
     if (!match) return undefined;
-    return match[1]
-      .replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1")
-      .trim() || undefined;
+    return (
+      match[1].replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g, "$1").trim() || undefined
+    );
   }
 
   private extractAll(xml: string, tag: string): string[] {
     const results: string[] = [];
     const re = new RegExp(`<${tag}[^>]*>[\\s\\S]*?</${tag}>`, "gi");
-    let match: RegExpExecArray | null;
-    while ((match = re.exec(xml)) !== null) {
+    let match = re.exec(xml);
+    while (match !== null) {
       results.push(match[0]);
+      match = re.exec(xml);
     }
     return results;
   }

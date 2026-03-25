@@ -1,5 +1,5 @@
-import type { Converter } from "../types.js";
 import type { Provider } from "../providers/types.js";
+import type { Converter } from "../types.js";
 
 export interface FormatDef {
   name: string;
