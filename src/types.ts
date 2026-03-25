@@ -18,6 +18,9 @@ export interface MarkitOptions {
 
   /** Transcribe audio, return text. Receives raw bytes and mimetype. */
   transcribe?: (audio: Buffer, mimetype: string) => Promise<string>;
+
+  /** Extra instructions appended to the image description prompt. */
+  prompt?: string;
 }
 
 export interface Converter {

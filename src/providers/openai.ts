@@ -8,7 +8,7 @@ export const openai: Provider = {
   defaultModel: "gpt-4.1-nano",
   defaultTranscriptionModel: "gpt-4o-mini-transcribe",
 
-  create(config: ResolvedConfig): MarkitOptions {
+  create(config: ResolvedConfig, prompt: string): MarkitOptions {
     return {
       describe: async (image: Buffer, mimetype: string): Promise<string> => {
         const res = await fetch(`${config.apiBase}/chat/completions`, {
@@ -23,7 +23,7 @@ export const openai: Provider = {
               {
                 role: "user",
                 content: [
-                  { type: "text", text: "Write a detailed description of this image." },
+                  { type: "text", text: prompt },
                   { type: "image_url", image_url: { url: `data:${mimetype};base64,${image.toString("base64")}` } },
                 ],
               },

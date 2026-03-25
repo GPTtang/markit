@@ -53,11 +53,13 @@ function resolve(provider: Provider, config: MarkitConfig): ResolvedConfig | nul
   };
 }
 
+const BASE_PROMPT = "Describe this image in detail.";
+
 /**
  * Build describe/transcribe functions from config.
  * Resolves provider, API key, model, and base URL automatically.
  */
-export function createLlmFunctions(config: MarkitConfig): MarkitOptions {
+export function createLlmFunctions(config: MarkitConfig, prompt?: string): MarkitOptions {
   const providerName = config.llm?.provider || "openai";
   const provider = providers[providerName];
 
@@ -70,5 +72,9 @@ export function createLlmFunctions(config: MarkitConfig): MarkitOptions {
   const resolved = resolve(provider, config);
   if (!resolved) return {};
 
-  return provider.create(resolved);
+  const fullPrompt = prompt
+    ? `${BASE_PROMPT}\n\n${prompt}`
+    : BASE_PROMPT;
+
+  return provider.create(resolved, fullPrompt);
 }

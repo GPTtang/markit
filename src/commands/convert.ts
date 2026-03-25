@@ -17,10 +17,10 @@ async function readStdin(): Promise<Buffer> {
 
 export async function convert(
   source: string,
-  options: OutputOptions & { output?: string },
+  options: OutputOptions & { output?: string; prompt?: string },
 ): Promise<void> {
   const config = loadConfig();
-  const llmFunctions = createLlmFunctions(config);
+  const llmFunctions = createLlmFunctions(config, options.prompt);
 
   const markit = new Markit(llmFunctions);
 

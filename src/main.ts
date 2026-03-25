@@ -19,6 +19,7 @@ program
   .version(`markit ${version}`, "-V, --version")
   .option("--json", "Output as JSON")
   .option("-q, --quiet", "Raw markdown only, no decoration")
+  .option("-p, --prompt <text>", "Extra instructions for image description")
   .addHelpText(
     "after",
     `
@@ -41,12 +42,14 @@ program
   .description("Convert a file or URL to markdown")
   .argument("<source>", "File path, URL, or - for stdin")
   .option("-o, --output <file>", "Write to file instead of stdout")
+  .option("-p, --prompt <text>", "Extra instructions for image description")
   .action(async (source, opts, cmd) => {
     const globals = cmd.optsWithGlobals();
     await convert(source, {
       json: globals.json,
       quiet: globals.quiet,
       output: opts.output,
+      prompt: opts.prompt,
     });
   });
 
@@ -131,6 +134,7 @@ program.on("command:*", async (args) => {
     json: globals.json,
     quiet: globals.quiet,
     output: globals.output,
+    prompt: globals.prompt,
   });
 });
 

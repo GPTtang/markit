@@ -23,7 +23,7 @@ export interface Provider {
   defaultTranscriptionModel?: string;
 
   /** Build describe/transcribe functions from resolved config */
-  create(config: ResolvedConfig): MarkitOptions;
+  create(config: ResolvedConfig, prompt: string): MarkitOptions;
 }
 
 export interface ResolvedConfig {

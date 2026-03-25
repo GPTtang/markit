@@ -7,7 +7,7 @@ export const anthropic: Provider = {
   defaultBase: "https://api.anthropic.com",
   defaultModel: "claude-haiku-4-5",
 
-  create(config: ResolvedConfig): MarkitOptions {
+  create(config: ResolvedConfig, prompt: string): MarkitOptions {
     return {
       describe: async (image: Buffer, mimetype: string): Promise<string> => {
         const res = await fetch(`${config.apiBase}/v1/messages`, {
@@ -32,7 +32,7 @@ export const anthropic: Provider = {
                       data: image.toString("base64"),
                     },
                   },
-                  { type: "text", text: "Write a detailed description of this image." },
+                  { type: "text", text: prompt },
                 ],
               },
             ],
