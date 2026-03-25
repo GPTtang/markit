@@ -63,6 +63,8 @@ jobs:
             echo "tag=latest" >> $GITHUB_OUTPUT
           fi
 
+      - run: npm install
+
       - name: Publish to npm
         run: npm publish --tag ${{ steps.npm-tag.outputs.tag }}
         env:
