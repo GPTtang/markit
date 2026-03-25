@@ -1,11 +1,20 @@
 import type { OutputOptions } from "../utils/output.js";
 import { output, bold, dim } from "../utils/output.js";
+import { loadAllPlugins } from "../plugins/loader.js";
 
-const FORMATS = [
+interface Format {
+  name: string;
+  extensions: string[];
+  builtin: boolean;
+  plugin?: string;
+  dep?: string;
+}
+
+const BUILTIN_FORMATS: Format[] = [
   { name: "PDF", extensions: [".pdf"], builtin: true },
   { name: "Word", extensions: [".docx"], builtin: true },
   { name: "PowerPoint", extensions: [".pptx"], builtin: true },
-  { name: "Excel", extensions: [".xlsx", ".xls"], builtin: false, dep: "xlsx" },
+  { name: "Excel", extensions: [".xlsx", ".xls"], builtin: true, dep: "xlsx" },
   { name: "HTML", extensions: [".html", ".htm"], builtin: true },
   { name: "EPUB", extensions: [".epub"], builtin: true },
   { name: "Jupyter", extensions: [".ipynb"], builtin: true },
@@ -27,16 +36,37 @@ export async function formats(
   _args: string[],
   options: OutputOptions,
 ): Promise<void> {
+  const plugins = await loadAllPlugins();
+  const pluginFormats: Format[] = plugins.flatMap((p) =>
+    p.formats.map((f) => ({
+      name: f.name,
+      extensions: f.extensions,
+      builtin: false,
+      plugin: p.name,
+    })),
+  );
+
+  const allFormats = [...BUILTIN_FORMATS, ...pluginFormats];
+
   output(options, {
-    json: () => ({ formats: FORMATS }),
+    json: () => ({ formats: allFormats }),
     human: () => {
       console.log();
       console.log(bold("Supported formats"));
       console.log();
-      for (const fmt of FORMATS) {
+      for (const fmt of BUILTIN_FORMATS) {
         const exts = fmt.extensions.join(", ");
-        const note = fmt.builtin ? "" : dim(` (requires: npm i ${fmt.dep})`);
+        const note = fmt.dep ? dim(` (requires: npm i ${fmt.dep})`) : "";
         console.log(`  ${fmt.name.padEnd(14)} ${dim(exts)}${note}`);
+      }
+      if (pluginFormats.length > 0) {
+        console.log();
+        console.log(bold("Plugin formats"));
+        console.log();
+        for (const fmt of pluginFormats) {
+          const exts = fmt.extensions.join(", ");
+          console.log(`  ${fmt.name.padEnd(14)} ${dim(exts)} ${dim(`(${fmt.plugin})`)}`);
+        }
       }
       console.log();
     },

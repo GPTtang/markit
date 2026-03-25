@@ -1,6 +1,6 @@
 import type { Converter } from "../types.js";
 import type { Provider } from "../providers/types.js";
-import type { MarkitPluginAPI, PluginDef, PluginFunction } from "./types.js";
+import type { MarkitPluginAPI, PluginDef, PluginFunction, FormatDef } from "./types.js";
 
 export function createPluginAPI(pluginId: string): {
   api: MarkitPluginAPI;
@@ -10,6 +10,7 @@ export function createPluginAPI(pluginId: string): {
   let version = "0.0.0";
   const converters: Converter[] = [];
   const providers: Provider[] = [];
+  const formats: FormatDef[] = [];
 
   const api: MarkitPluginAPI = {
     setName(n: string) {
@@ -18,8 +19,11 @@ export function createPluginAPI(pluginId: string): {
     setVersion(v: string) {
       version = v;
     },
-    registerConverter(converter: Converter) {
+    registerConverter(converter: Converter, format?: FormatDef) {
       converters.push(converter);
+      if (format) {
+        formats.push(format);
+      }
     },
     registerProvider(provider: Provider) {
       providers.push(provider);
@@ -27,7 +31,7 @@ export function createPluginAPI(pluginId: string): {
   };
 
   function resolve(): PluginDef {
-    return { name, version, converters, providers };
+    return { name, version, converters, providers, formats };
   }
 
   return { api, resolve };

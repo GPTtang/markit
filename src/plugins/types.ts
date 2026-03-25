@@ -1,10 +1,15 @@
 import type { Converter } from "../types.js";
 import type { Provider } from "../providers/types.js";
 
+export interface FormatDef {
+  name: string;
+  extensions: string[];
+}
+
 export interface MarkitPluginAPI {
   setName(name: string): void;
   setVersion(version: string): void;
-  registerConverter(converter: Converter): void;
+  registerConverter(converter: Converter, format?: FormatDef): void;
   registerProvider(provider: Provider): void;
 }
 
@@ -15,6 +20,7 @@ export interface PluginDef {
   version: string;
   converters: Converter[];
   providers: Provider[];
+  formats: FormatDef[];
 }
 
 export interface InstalledPlugin {
