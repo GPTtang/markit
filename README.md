@@ -37,7 +37,7 @@ markit schema.yaml
 markit https://example.com/article
 markit https://en.wikipedia.org/wiki/Markdown
 
-# Media (with AI — set OPENAI_API_KEY or ANTHROPIC_API_KEY)
+# Media (via LLMs — set OPENAI_API_KEY or ANTHROPIC_API_KEY)
 markit photo.jpg                          # EXIF metadata + AI description
 markit recording.mp3                      # Audio metadata + transcription
 markit photo.jpg -p "Extract all text"    # Custom instructions
